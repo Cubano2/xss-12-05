@@ -113,3 +113,6 @@ function escape(input) {
     }
 }                         
 ```
+Level 6  ```javascript:prompt(1)#{"action":1}```
+
+Para burlar o filtro que bloqueia javascript:, vbscript: e URIs data:, exploramos o DOM clobbering criando um <input name="action"> via JSON após o #, de modo que document.forms[0].action passa no teste e dispara nosso payload.
