@@ -21,7 +21,7 @@ O level 0 é bem tranquilo, com uma simples HTML injection consguimos passar del
 level 0 ```"><script>prompt(1)</script>```
 
 ## level 1
-```python
+```javascript
 function escape(input) {
     // tags stripping mechanism from ExtJS library
     // Ext.util.Format.stripTags
