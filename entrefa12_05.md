@@ -32,6 +32,7 @@ function escape(input) {
 }        
 ```
 level 1 ```<img src=1 onerror='prompt(1)'```
+
 O level 1 coloca um nível de dificuldade a mais fazendo a gente burlar um regex que tem no código. A regex `/<\/?[^>]+>/gi` procura por `<…>` ou `</…>` e remove tudo entre os colchetes. Nisso ela espera um `>` no final. Contornando isso conseguimos passar.
 
 ## level 2
@@ -60,6 +61,7 @@ function escape(input) {
 }            
 ```
 Level 3 ```--!><svg/onload=prompt(1)```
+
 Para contornar o filtro (que remove ->), usamos o fechamento alternativo de comentário --!> definido no HTML5, fechamos o comentário e em seguida executamos o vetor SVG.
 
 
@@ -75,6 +77,8 @@ function escape(input) {
 ```
 Level 5 ```"type=image src onerror
 ="prompt(1) ```
+
+
 Neste nivel para contornar o filtro (que remove `>`, qualquer `on…=` e a palavra `focus`), exploramos o fato de que quebras de linha também separam atributos. Assim, escapamos do atributo atual e injetamos um handler
 
 
