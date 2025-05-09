@@ -10,7 +10,7 @@ Nesse site tem desafios de XSS que ensinam sobre a gente sobre os tipos de vulne
 O navegador usado neste write-up foi o Microsof Edge
 
 ## level 0
-```python
+```Js
 function escape(input) {
     // warm up
     // script should be executed without user interaction
