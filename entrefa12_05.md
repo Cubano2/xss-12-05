@@ -7,7 +7,7 @@
 Aqui neste write-up se encontra as respostas do site [prompt.ml](https://prompt.ml/0)  
 
 Nesse site tem desafios de XSS que ensinam sobre a gente sobre os tipos de vulnerabilidade em aplicação web e em navegadores.
-O navegador usado neste write-up foi o Microsof Edge
+O navegador usado neste write-up foi o Microsof Edge e o Firefox
 
 ## level 0
 ```Js
@@ -119,4 +119,38 @@ function escape(input) {
 ```
 Level 6  ```javascript:prompt(1)#{"action":1}```
 
-Para burlar o filtro que bloqueia javascript:, vbscript: e URIs data:, exploramos o DOM clobbering criando um <input name="action"> via JSON após o #, de modo que document.forms[0].action passa no teste e dispara nosso payload.
+Para burlar o filtro que bloqueia javascript:, vbscript: e URIs data:, exploramos o DOM clobbering criando um `<input name="action">` via JSON após o #, de modo que `document.forms[0].action` passa no teste e dispara nosso payload.
+
+## level 7
+```javascript
+function escape(input) {
+    // pass in something like dog#cat#bird#mouse...
+    var segments = input.split('#');
+    return segments.map(function(title) {
+        // title can only contain 12 characters
+        return '<p class="comment" title="' + title.slice(0, 12) + '"></p>';
+    }).join('\n');
+}       
+```
+Level 7 `"><svg/a=#"onload='/*#*/prompt(1)'`
+Neste nível, o filtro faz três coisas: 1) divide a entrada em segmentos separados por #; 2) limita cada segmento a 12 caracteres; 3) envolve cada segmento num <p class="comment" title="…"></p>.
+Para burlar isso, no primeiro segmento usamos "> para fechar o atributo title e a tag <p>, em seguida abrimos nosso próprio <svg> e iniciamos um atributo “junk” (a=).
+No segundo segmento, fechamos o atributo junk ("), abrimos o evento onload= e usamos /* para encapsular o conteúdo indesejado que virá antes de alcançar o terceiro segmento.
+No terceiro segmento, fechamos o comentário JS (*/) e finalmente chamamos prompt(1), completando o payload.
+
+
+## level 8
+```javascript
+function escape(input) {
+    // prevent input from getting out of comment
+    // strip off line-breaks and stuff
+    input = input.replace(/[\r\n</"]/g, '');
+
+    return '                                \n\
+<script>                                    \n\
+    // console.log("' + input + '");        \n\
+</script> ';
+}        
+```
+Level 8 ` prompt(1) -->`
+Neste nível, o payload faz duas coisas principais: 1) insere um espaço antes do prompt para evitar problemas de concatenação; 2) encerra o comentário JS com -->. Isso é feito porque a sequência --> é interpretada como o fim de um comentário no código JavaScript, mesmo em navegadores que são permissivos em relação a isso, permitindo que o restante do código seja executado sem interferências.
