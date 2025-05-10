@@ -133,6 +133,7 @@ function escape(input) {
 }       
 ```
 Level 7 `"><svg/a=#"onload='/*#*/prompt(1)'`
+
 Neste nível, o filtro faz três coisas: 1) divide a entrada em segmentos separados por #; 2) limita cada segmento a 12 caracteres; 3) envolve cada segmento num <p class="comment" title="…"></p>.
 Para burlar isso, no primeiro segmento usamos "> para fechar o atributo title e a tag <p>, em seguida abrimos nosso próprio <svg> e iniciamos um atributo “junk” (a=).
 No segundo segmento, fechamos o atributo junk ("), abrimos o evento onload= e usamos /* para encapsular o conteúdo indesejado que virá antes de alcançar o terceiro segmento.
@@ -153,4 +154,5 @@ function escape(input) {
 }        
 ```
 Level 8 ` prompt(1) -->`
+
 Neste nível, o payload faz duas coisas principais: 1) insere um espaço antes do prompt para evitar problemas de concatenação; 2) encerra o comentário JS com -->. Isso é feito porque a sequência --> é interpretada como o fim de um comentário no código JavaScript, mesmo em navegadores que são permissivos em relação a isso, permitindo que o restante do código seja executado sem interferências.
