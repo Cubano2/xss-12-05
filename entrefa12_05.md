@@ -176,3 +176,39 @@ Level 9 `<ſcript/src=http://localhost:8000/test.js></ſcript>`
 Neste nível, podemos observar que a entrada do usuário é tratada por “_” e também é feita a conversão de minúsculas para maiúsculas. Para contornar isso, podemos criar um payload utilizando alguns caracteres UNICODE da internet e, além disso, precisamos criar um arquivo JavaScript contendo o texto `prompt(1)`. Com isso só colocar no site a resposta desse level que conseguimos passar de nível.
 
 ![image](https://github.com/user-attachments/assets/dc13ddf5-82c6-4c8a-87fe-e57a00362141)
+
+## level A
+```javascript
+function escape(input) {
+    // (╯°□°）╯︵ ┻━┻
+    input = encodeURIComponent(input).replace(/prompt/g, 'alert');
+    // ┬──┬ ﻿ノ( ゜-゜ノ) chill out bro
+    input = input.replace(/'/g, '');
+
+    // (╯°□°）╯︵ /(.□. \）DONT FLIP ME BRO
+    return '<script>' + input + '</script> ';
+}
+```
+Level A `p'rompt(1)`
+O nível A (10) é um dos mais fáceis de resolver neste desafio. Existem duas expressões regulares a serem contornadas: a primeira remove todas as ocorrências da palavra-chave `prompt`, enquanto a segunda remove todas as aspas simples `'`. Para contornar a primeira expressão regular, basta usar uma aspa simples para dividir a palavra-chave `prompt` em `pr'ompt`, o que claramente não é uma instrução JavaScript válida. Mas não se preocupe, a segunda expressão regular removerá o caractere invasor `'`, retornando um vetor de ataque válido!
+
+## level B
+```javascript
+function escape(input) {
+    // name should not contain special characters
+    var memberName = input.replace(/[[|\s+*/\\<>&^:;=~!%-]/g, '');
+
+    // data to be parsed as JSON
+    var dataString = '{"action":"login","message":"Welcome back, ' + memberName + '."}';
+
+    // directly "parse" data in script context
+    return '                                \n\
+<script>                                    \n\
+    var data = ' + dataString + ';          \n\
+    if (data.action === "login")            \n\
+        document.write(data.message)        \n\
+</script> ';
+}
+```
+Level B `"(prompt(1))in"`
+O nível B (11) nos permite injetar diretamente no que será o corpo de um elemento `script`. No entanto, antes de fazer isso, a string que podemos influenciar passa por um filtro rigoroso e não podemos injetar operadores ou outros elementos da linguagem que permitam uma fácil concatenação e injeção de payload. A solução aqui é usar um operador alfanumérico - ou seja, um operador que não nos obrigue a usar os caracteres especiais proibidos. Bem, existem vários desses e um que podemos é o operador `in`.
