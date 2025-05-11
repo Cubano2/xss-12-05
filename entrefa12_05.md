@@ -271,3 +271,43 @@ O nível C (12) tem um novo nível de dificuldade por conta do `encodeURICompone
 level D ```{"source":{},"__proto__":{"source":"$`onerror=prompt(1)>"}}```
  
 Nesse nível devemos enviar um JSON com um source propositalmente inválido e um outro dentro de `__proto__`. O filtro remove o source inválido, sobrando só o do protótipo. Usa o poder de herança pra “injetar” código onde antes só era permitido texto simples. Finalmente, engana o .replace(/"/g,'') usando o $`` do replace, montando um onerror` sem precisar de aspas.
+
+
+## level E
+```javascript
+function escape(input) {
+    // I expect this one will have other solutions, so be creative :)
+    // mspaint makes all file names in all-caps :(
+    // too lazy to convert them back in lower case
+    // sample input: prompt.jpg => PROMPT.JPG
+    input = input.toUpperCase();
+    // only allows images loaded from own host or data URI scheme
+    input = input.replace(/\/\/|\w+:/g, 'data:');
+    // miscellaneous filtering
+    input = input.replace(/[\\&+%\s]|vbs/gi, '_');
+
+    return '<img src="' + input + '">';
+}
+```
+level E 
+
+
+
+
+## level F
+```javascript
+function escape(input) {
+    // sort of spoiler of level 7
+    input = input.replace(/\*/g, '');
+    // pass in something like dog#cat#bird#mouse...
+    var segments = input.split('#');
+
+    return segments.map(function(title, index) {
+        // title can only contain 15 characters
+        return '<p class="comment" title="' + title.slice(0, 15) + '" data-comment=\'{"id":' + index + '}\'></p>';
+    }).join('\n');
+}
+```
+level F
+
+Neste nivel temos que dividir o payload em pedaços separados por #, cada pedaço vira um <p> com atributo title. O primeiro pedaço (">) fecha o <p>, liberando o resto do texto para inserir tags de verdade. Os comentários HTML dentro de <svg> e <script> servem para “esconder” os atributos gerados automaticamente, garantindo que apenas o prompt(1) seja executado.
