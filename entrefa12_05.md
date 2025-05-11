@@ -190,6 +190,7 @@ function escape(input) {
 }
 ```
 Level A `p'rompt(1)`
+
 O nível A (10) é um dos mais fáceis de resolver neste desafio. Existem duas expressões regulares a serem contornadas: a primeira remove todas as ocorrências da palavra-chave `prompt`, enquanto a segunda remove todas as aspas simples `'`. Para contornar a primeira expressão regular, basta usar uma aspa simples para dividir a palavra-chave `prompt` em `pr'ompt`, o que claramente não é uma instrução JavaScript válida. Mas não se preocupe, a segunda expressão regular removerá o caractere invasor `'`, retornando um vetor de ataque válido!
 
 ## level B
@@ -211,4 +212,5 @@ function escape(input) {
 }
 ```
 Level B `"(prompt(1))in"`
+
 O nível B (11) nos permite injetar diretamente no que será o corpo de um elemento `script`. No entanto, antes de fazer isso, a string que podemos influenciar passa por um filtro rigoroso e não podemos injetar operadores ou outros elementos da linguagem que permitam uma fácil concatenação e injeção de payload. A solução aqui é usar um operador alfanumérico - ou seja, um operador que não nos obrigue a usar os caracteres especiais proibidos. Bem, existem vários desses e um que podemos é o operador `in`.
