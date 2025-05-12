@@ -273,25 +273,6 @@ level D ```{"source":{},"__proto__":{"source":"$`onerror=prompt(1)>"}}```
 Nesse nível devemos enviar um JSON com um source propositalmente inválido e um outro dentro de `__proto__`. O filtro remove o source inválido, sobrando só o do protótipo. Usa o poder de herança pra “injetar” código onde antes só era permitido texto simples. Finalmente, engana o .replace(/"/g,'') usando o $`` do replace, montando um onerror` sem precisar de aspas.
 
 
-## level E
-```javascript
-function escape(input) {
-    // I expect this one will have other solutions, so be creative :)
-    // mspaint makes all file names in all-caps :(
-    // too lazy to convert them back in lower case
-    // sample input: prompt.jpg => PROMPT.JPG
-    input = input.toUpperCase();
-    // only allows images loaded from own host or data URI scheme
-    input = input.replace(/\/\/|\w+:/g, 'data:');
-    // miscellaneous filtering
-    input = input.replace(/[\\&+%\s]|vbs/gi, '_');
-
-    return '<img src="' + input + '">';
-}
-```
-level E 
-
-
 
 
 ## level F
